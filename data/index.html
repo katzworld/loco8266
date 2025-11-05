@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loco8266 Train Controller</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: #ecf0f1;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            color: #f39c12;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .dual-controller {
+            display: flex;
+            gap: 40px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .track-controller {
+            background: rgba(52, 73, 94, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            min-width: 450px;
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .track-title {
+            font-size: 1.8em;
+            color: #3498db;
+            margin-bottom: 25px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .track-controller.track2 .track-title {
+            color: #e74c3c;
+        }
+
+        /* Prominent Speed Display */
+        .track-speed-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 10px 15px;
+            min-width: 80px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .track-speed-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #f39c12;
+            text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+            line-height: 1;
+        }
+
+        .track-speed-label {
+            font-size: 0.8em;
+            color: #bdc3c7;
+            margin-top: 2px;
+        }
+
+        .track-controller {
+            position: relative;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        /* Train Controls */
+        .train-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .control-group {
+            width: 100%;
+            text-align: center;
+        }
+
+        .control-label {
+            font-size: 1.2em;
+            color: #ecf0f1;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        /* Throttle Handle */
+        .throttle-container {
+            background: rgba(52, 73, 94, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .throttle-handle {
+            -webkit-appearance: none;
+            width: 300px;
+            height: 8px;
+            border-radius: 4px;
+            background: #34495e;
+            outline: none;
+            margin-bottom: 15px;
+        }
+
+        .throttle-handle::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #f39c12;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(243, 156, 18, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .throttle-handle::-webkit-slider-thumb:hover {
+            background: #e67e22;
+            transform: scale(1.1);
+        }
+
+        .throttle-handle::-moz-range-thumb {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #f39c12;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 8px rgba(243, 156, 18, 0.4);
+        }
+
+        .throttle-notches {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 12px;
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+
+        /* Brake Handle */
+        .brake-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(52, 73, 94, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .brake-button {
+            background: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .brake-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .brake-button.active {
+            background: #e67e22;
+            box-shadow: 0 0 15px rgba(230, 126, 34, 0.5);
+        }
+
+        .brake-button.brake-emergency {
+            background: #c0392b;
+            font-size: 1.1em;
+            animation: pulse 2s infinite;
+        }
+
+        .brake-button.brake-emergency.active {
+            background: #a93226;
+            animation: emergency-flash 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(192, 57, 43, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(192, 57, 43, 0);
+            }
+        }
+
+        @keyframes emergency-flash {
+            0% {
+                background: #c0392b;
+            }
+
+            100% {
+                background: #e74c3c;
+            }
+        }
+
+        .brake-status {
+            font-size: 0.9em;
+            color: #27ae60;
+            font-weight: bold;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .brake-status.active {
+            opacity: 1;
+        }
+
+        /* Speed Display */
+        .speed-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(52, 73, 94, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .speed-label {
+            font-size: 1.1em;
+            color: #bdc3c7;
+        }
+
+        .speed-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #f39c12;
+            text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+            min-width: 60px;
+        }
+
+        .speed-unit {
+            font-size: 1.1em;
+            color: #bdc3c7;
+        }
+
+        /* Direction Switch */
+        .direction-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .direction-label {
+            font-size: 1.3em;
+            color: #ecf0f1;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        .direction-switch {
+            position: relative;
+            width: 120px;
+            height: 60px;
+            background: #34495e;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow:
+                inset -5px -5px 10px rgba(0, 0, 0, 0.5),
+                inset 5px 5px 10px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .direction-switch.reverse {
+            background: #e74c3c;
+        }
+
+        .direction-switch.forward {
+            background: #27ae60;
+        }
+
+        .switch-slider {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 50px;
+            height: 50px;
+            background: #ecf0f1;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .direction-switch.reverse .switch-slider {
+            transform: translateX(60px);
+        }
+
+        .direction-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 120px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+
+        /* Status Display */
+        .status {
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(44, 62, 80, 0.7);
+            border-radius: 10px;
+            border-left: 4px solid #f39c12;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+
+        .locomotive-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            animation: chug 2s ease-in-out infinite;
+        }
+
+        @keyframes chug {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-2px);
+            }
+
+            75% {
+                transform: translateX(2px);
+            }
+        }
+
+        /* Cruise Control */
+        .cruise-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background: rgba(44, 62, 80, 0.5);
+            border-radius: 15px;
+            border: 2px solid #3498db;
+        }
+
+        .cruise-label {
+            font-size: 1.3em;
+            color: #3498db;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .cruise-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cruise-input {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            background: rgba(52, 73, 94, 0.8);
+            color: #ecf0f1;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .cruise-input:focus {
+            outline: none;
+            border-color: #2980b9;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+        }
+
+        .cruise-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cruise-set {
+            background: #27ae60;
+            color: white;
+        }
+
+        .cruise-set:hover {
+            background: #229954;
+            transform: translateY(-1px);
+        }
+
+        .cruise-cancel {
+            background: #e67e22;
+            color: white;
+        }
+
+        .cruise-cancel:hover {
+            background: #d35400;
+            transform: translateY(-1px);
+        }
+
+        .cruise-status {
+            font-size: 0.9em;
+            color: #27ae60;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cruise-status.active {
+            opacity: 1;
+        }
+
+        /* Waveform Generator Control */
+        .waveform-control {
+            margin-top: 20px;
+            text-align: cent er;
+        }
+
+        .waveform-label {
+            font-size: 1.1em;
+            color: #2c3e50;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .waveform-toggle-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .waveform-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 160px;
+        }
+
+        .waveform-button:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .waveform-button.advanced {
+            background: #e74c3c;
+        }
+
+        .waveform-button.advanced:hover {
+            background: #c0392b;
+        }
+
+        .waveform-status {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .emergency-stop {
+            background: #c0392b;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(192, 57, 43, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .emergency-stop:hover {
+            background: #a93226;
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(192, 57, 43, 0.6);
+        }
+
+        .emergency-stop:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <h1>Dual Track Controller</h1>
+
+        <div class="dual-controller">
+            <!-- Track 1 Controller -->
+            <div class="track-controller track1" id="track1">
+                <div class="track-speed-display">
+                    <div class="track-speed-value" id="topSpeedValue">--</div>
+                    <div class="track-speed-label">Speed</div>
+                </div>
+                <div class="track-title">TRACK 1</div>
+                <div class="controls">
+                    <!-- Train Controls -->
+                    <div class="train-controls">
+                        <!-- Throttle Handle -->
+                        <div class="control-group">
+                            <div class="control-label">Throttle</div>
+                            <div class="throttle-container">
+                                <input type="range" class="throttle-handle" id="throttleHandle" min="0" max="16"
+                                    value="0" step="1">
+                                <div class="throttle-notches">
+                                    <span>0</span><span>4</span><span>8</span><span>12</span><span>16</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Brake Handle -->
+                        <div class="control-group">
+                            <div class="control-label">Dynamic Brake</div>
+                            <div class="brake-container">
+                                <button class="brake-button" id="brakeLight" data-level="1">Light</button>
+                                <button class="brake-button" id="brakeMedium" data-level="2">Medium</button>
+                                <button class="brake-button" id="brakeHeavy" data-level="3">Heavy</button>
+                                <button class="brake-button brake-emergency" id="brakeEmergency"
+                                    data-level="4">EMERGENCY</button>
+                            </div>
+                            <div class="brake-status" id="brakeStatus">Brake: OFF</div>
+                        </div>
+
+                        <!-- Speed Display -->
+                        <div class="speed-display">
+                            <div class="speed-label">Current Speed</div>
+                            <div class="speed-value" id="speedValue">0</div>
+                            <div class="speed-unit">/ 16</div>
+                        </div>
+                    </div>
+
+                    <!-- Direction Switch -->
+                    <div class="direction-container">
+                        <div class="direction-label">Direction</div>
+                        <div class="direction-switch forward" id="directionSwitch">
+                            <div class="switch-slider"></div>
+                        </div>
+                        <div class="direction-labels">
+                            <span>FORWARD</span>
+                            <span>REVERSE</span>
+                        </div>
+                    </div>
+
+                    <!-- Cruise Control -->
+                    <div class="cruise-control">
+                        <div class="cruise-label">Cruise Control</div>
+                        <div class="cruise-input-group">
+                            <input type="number" class="cruise-input" id="cruiseInput" min="0" max="16"
+                                placeholder="0-16" />
+                            <button class="cruise-button cruise-set" id="cruiseSet">SET</button>
+                            <button class="cruise-button cruise-cancel" id="cruiseCancel">CANCEL</button>
+                        </div>
+                        <div class="cruise-status" id="cruiseStatus">Cruise: OFF</div>
+                    </div>
+
+                    <!-- Waveform Generator Toggle -->
+                    <div class="waveform-control">
+                        <div class="waveform-label">Motor Waveform</div>
+                        <div class="waveform-toggle-group">
+                            <button class="waveform-button" id="waveformToggle">Classic PWM</button>
+                            <div class="waveform-status" id="waveformStatus">Standard PWM output</div>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Stop -->
+                    <button class="emergency-stop" id="emergencyStop">EMERGENCY STOP</button>
+                </div>
+            </div>
+
+            <!-- Track 2 Controller -->
+            <div class="track-controller track2" id="track2">
+                <div class="track-speed-display">
+                    <div class="track-speed-value" id="topSpeedValue2">--</div>
+                    <div class="track-speed-label">Speed</div>
+                </div>
+                <div class="track-title">TRACK 2</div>
+                <div class="controls">
+                    <!-- Train Controls -->
+                    <div class="train-controls">
+                        <!-- Throttle Handle -->
+                        <div class="control-group">
+                            <div class="control-label">Throttle</div>
+                            <div class="throttle-container">
+                                <input type="range" class="throttle-handle" id="throttleHandle2" min="0" max="16"
+                                    value="0" step="1">
+                                <div class="throttle-notches">
+                                    <span>0</span><span>4</span><span>8</span><span>12</span><span>16</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Brake Handle -->
+                        <div class="control-group">
+                            <div class="control-label">Dynamic Brake</div>
+                            <div class="brake-container">
+                                <button class="brake-button" id="brakeLight2" data-level="1">Light</button>
+                                <button class="brake-button" id="brakeMedium2" data-level="2">Medium</button>
+                                <button class="brake-button" id="brakeHeavy2" data-level="3">Heavy</button>
+                                <button class="brake-button brake-emergency" id="brakeEmergency2"
+                                    data-level="4">EMERGENCY</button>
+                            </div>
+                            <div class="brake-status" id="brakeStatus2">Brake: OFF</div>
+                        </div>
+
+                        <!-- Speed Display -->
+                        <div class="speed-display">
+                            <div class="speed-label">Current Speed</div>
+                            <div class="speed-value" id="speedValue2">0</div>
+                            <div class="speed-unit">/ 16</div>
+                        </div>
+                    </div>
+
+                    <!-- Direction Switch -->
+                    <div class="direction-container">
+                        <div class="direction-label">Direction</div>
+                        <div class="direction-switch forward" id="directionSwitch2">
+                            <div class="switch-slider"></div>
+                        </div>
+                        <div class="direction-labels">
+                            <span>FORWARD</span>
+                            <span>REVERSE</span>
+                        </div>
+                    </div>
+
+                    <!-- Cruise Control -->
+                    <div class="cruise-control">
+                        <div class="cruise-label">Cruise Control</div>
+                        <div class="cruise-input-group">
+                            <input type="number" class="cruise-input" id="cruiseInput2" min="0" max="16"
+                                placeholder="0-16" />
+                            <button class="cruise-button cruise-set" id="cruiseSet2">SET</button>
+                            <button class="cruise-button cruise-cancel" id="cruiseCancel2">CANCEL</button>
+                        </div>
+                        <div class="cruise-status" id="cruiseStatus2">Cruise: OFF</div>
+                    </div>
+
+                    <!-- Waveform Generator Toggle -->
+                    <div class="waveform-control">
+                        <div class="waveform-label">Motor Waveform</div>
+                        <div class="waveform-toggle-group">
+                            <button class="waveform-button" id="waveformToggle2">Classic PWM</button>
+                            <div class="waveform-status" id="waveformStatus2">Standard PWM output</div>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Stop -->
+                    <button class="emergency-stop" id="emergencyStop2">EMERGENCY STOP</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden elements for JavaScript references -->
+        <div style="display: none;">
+            <span id="currentSpeed">0</span>
+            <span id="targetSpeed">0</span>
+            <span id="currentDirection">Forward</span>
+            <span id="adcStep">0</span>
+            <span id="currentSpeed2">0</span>
+            <span id="targetSpeed2">0</span>
+            <span id="currentDirection2">Forward</span>
+            <span id="adcStep2">0</span>
+        </div>
+    </div>
+
+    <script>
+        // Global variables - Track 1
+        let currentSpeed = 0;
+        let targetSpeed = 0;
+        let isForward = true;
+        let isDragging = false;
+        let cruiseActive = false;
+        let cruiseSpeed = 0;
+        let waveformMode = false; // false = Classic PWM, true = Advanced Waveforms
+        let currentBrakeLevel = 0;
+        let brakeActive = false;
+
+        // Global variables - Track 2
+        let currentSpeed2 = 0;
+        let targetSpeed2 = 0;
+        let isForward2 = true;
+        let cruiseActive2 = false;
+        let cruiseSpeed2 = 0;
+        let waveformMode2 = false;
+        let currentBrakeLevel2 = 0;
+        let brakeActive2 = false;
+
+        // Constants
+        const maxSpeed = 1023; // ESP8266 PWM max value
+        const adcSteps = 16; // Number of ADC steps (0-15)
+
+        // Handle throttle changes
+        function handleThrottle() {
+            const throttle = document.getElementById('throttleHandle');
+            const speed = parseInt(throttle.value);
+
+            // Cancel any active brake when using throttle
+            if (speed > 0 && brakeActive) {
+                cancelBrake();
+            }
+
+            updateSpeed(speed);
+        }
+
+        // Handle brake application
+        function applyBrake(level) {
+            // Cancel cruise control when braking
+            if (cruiseActive) {
+                cancelCruise();
+            }
+
+            currentBrakeLevel = level;
+            brakeActive = (level > 0);
+
+            // Reset throttle and speed display when braking
+            if (brakeActive) {
+                document.getElementById('throttleHandle').value = 0;
+                targetSpeed = 0;
+
+                // Force speed displays to show 0 when braking (train is stopped)
+                document.getElementById('speedValue').textContent = '0';
+                document.getElementById('topSpeedValue').textContent = '0';
+                document.getElementById('targetSpeed').textContent = '0';
+                document.getElementById('adcStep').textContent = '0';
+            }
+
+            // Send brake command to ESP8266
+            sendCommand('brake', level);
+            updateBrakeDisplay();
+        }
+
+        // Cancel brake
+        function cancelBrake() {
+            currentBrakeLevel = 0;
+            brakeActive = false;
+            sendCommand('brake', 0);
+            updateBrakeDisplay();
+
+            // Restore speed display when braking is cancelled
+            // Note: Actual speed will be updated by next status poll
+            const currentAdc = pwmToAdc(currentSpeed);
+            document.getElementById('speedValue').textContent = currentAdc;
+            document.getElementById('topSpeedValue').textContent = currentAdc;
+            document.getElementById('adcStep').textContent = currentAdc;
+        }
+
+        // Update brake button display
+        function updateBrakeDisplay() {
+            const buttons = document.querySelectorAll('#track1 .brake-button');
+            const status = document.getElementById('brakeStatus');
+
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            if (brakeActive) {
+                const activeButton = document.querySelector(`#track1 [data-level="${currentBrakeLevel}"]`);
+                if (activeButton) {
+                    activeButton.classList.add('active');
+                }
+
+                const brakeNames = ['OFF', 'Light', 'Medium', 'Heavy', 'EMERGENCY'];
+                status.textContent = `Brake: ${brakeNames[currentBrakeLevel]}`;
+                status.classList.add('active');
+            } else {
+                status.textContent = 'Brake: OFF';
+                status.classList.remove('active');
+            }
+        }
+
+        // Convert ADC step to PWM value
+        function adcToPwm(adcStep) {
+            return Math.round((adcStep / adcSteps) * maxSpeed);
+        }
+
+        // Convert PWM value to ADC step
+        function pwmToAdc(pwmValue) {
+            return Math.round((pwmValue / maxSpeed) * adcSteps);
+        }
+
+        // Update speed and display
+        function updateSpeed(adcStep) {
+            // If cruise control is active and this isn't a cruise command, ignore manual input
+            if (cruiseActive && adcStep !== cruiseSpeed) {
+                return;
+            }
+
+            const pwmValue = adcToPwm(adcStep);
+            targetSpeed = pwmValue;
+
+            // Update displays
+            document.getElementById('speedValue').textContent = adcStep;
+            document.getElementById('topSpeedValue').textContent = adcStep;
+            document.getElementById('targetSpeed').textContent = pwmValue;
+            document.getElementById('adcStep').textContent = adcStep;
+
+            // Update throttle handle position
+            document.getElementById('throttleHandle').value = adcStep;
+
+            // Send to ESP8266
+            sendCommand('speed', pwmValue);
+        }
+
+        // Handle direction switch
+        function toggleDirection() {
+            isForward = !isForward;
+            const switchElement = document.getElementById('directionSwitch');
+            const directionDisplay = document.getElementById('currentDirection');
+
+            if (isForward) {
+                switchElement.className = 'direction-switch forward';
+                directionDisplay.textContent = 'Forward';
+            } else {
+                switchElement.className = 'direction-switch reverse';
+                directionDisplay.textContent = 'Reverse';
+            }
+
+            // Send to ESP8266
+            sendCommand('direction', isForward ? 'forward' : 'reverse');
+        }
+
+        // Emergency stop
+        function emergencyStop() {
+            cancelCruise(); // Cancel cruise control on emergency stop
+            targetSpeed = 0;
+            updateSpeed(0);
+            sendCommand('emergency_stop', true);
+        }
+
+        // Cruise Control Functions
+        function setCruise() {
+            const input = document.getElementById('cruiseInput');
+            const speed = parseInt(input.value);
+
+            if (isNaN(speed) || speed < 0 || speed > adcSteps) {
+                alert('Please enter a speed between 0 and 16');
+                return;
+            }
+
+            // Clear any active brakes when setting cruise
+            if (brakeActive) {
+                cancelBrake();
+            }
+
+            cruiseActive = true;
+            cruiseSpeed = speed;
+
+            // Update displays
+            updateSpeed(speed);
+            updateCruiseStatus();
+
+            // Disable manual speed dial while cruise is active
+            document.getElementById('speedDial').style.pointerEvents = 'none';
+            document.getElementById('speedDial').style.opacity = '0.5';
+        }
+
+        function cancelCruise() {
+            cruiseActive = false;
+            cruiseSpeed = 0;
+
+            // Re-enable manual speed dial
+            document.getElementById('speedDial').style.pointerEvents = 'auto';
+            document.getElementById('speedDial').style.opacity = '1';
+
+            updateCruiseStatus();
+        }
+
+        function updateCruiseStatus() {
+            const status = document.getElementById('cruiseStatus');
+            if (cruiseActive) {
+                status.textContent = `Cruise: ON (${cruiseSpeed})`;
+                status.className = 'cruise-status active';
+            } else {
+                status.textContent = 'Cruise: OFF';
+                status.className = 'cruise-status';
+            }
+        }
+
+        // Waveform Generator Toggle
+        function toggleWaveform() {
+            waveformMode = !waveformMode;
+            sendCommand('waveform_mode', waveformMode);
+            updateWaveformDisplay();
+        }
+
+        function updateWaveformDisplay() {
+            const button = document.getElementById('waveformToggle');
+            const status = document.getElementById('waveformStatus');
+
+            if (waveformMode) {
+                button.textContent = 'Advanced Waveforms';
+                button.className = 'waveform-button advanced';
+                status.textContent = 'Triangle <300 → Trapezoidal @125Hz ≥300';
+            } else {
+                button.textContent = 'Classic PWM';
+                button.className = 'waveform-button';
+                status.textContent = 'Standard PWM output';
+            }
+        }
+
+        // ============ TRACK 2 CONTROL FUNCTIONS ============
+
+        // Handle Track 2 throttle changes
+        function handleThrottle2() {
+            const throttle = document.getElementById('throttleHandle2');
+            const speed = parseInt(throttle.value);
+
+            // Cancel any active brake when using throttle
+            if (speed > 0 && brakeActive2) {
+                cancelBrake2();
+            }
+
+            updateSpeed2(speed);
+        }
+
+        // Handle Track 2 brake application
+        function applyBrake2(level) {
+            // Cancel cruise control when braking
+            if (cruiseActive2) {
+                cancelCruise2();
+            }
+
+            currentBrakeLevel2 = level;
+            brakeActive2 = (level > 0);
+
+            // Reset throttle and speed display when braking
+            if (brakeActive2) {
+                document.getElementById('throttleHandle2').value = 0;
+                targetSpeed2 = 0;
+
+                // Force speed displays to show 0 when braking (train is stopped)
+                document.getElementById('speedValue2').textContent = '0';
+                document.getElementById('topSpeedValue2').textContent = '0';
+                document.getElementById('targetSpeed2').textContent = '0';
+                document.getElementById('adcStep2').textContent = '0';
+            }
+
+            // Send brake command to ESP8266
+            sendCommand('brake2', level);
+            updateBrakeDisplay2();
+        }
+
+        // Cancel Track 2 brake
+        function cancelBrake2() {
+            currentBrakeLevel2 = 0;
+            brakeActive2 = false;
+            sendCommand('brake2', 0);
+            updateBrakeDisplay2();
+
+            // Restore speed display when braking is cancelled
+            const currentAdc = pwmToAdc(currentSpeed2);
+            document.getElementById('speedValue2').textContent = currentAdc;
+            document.getElementById('topSpeedValue2').textContent = currentAdc;
+            document.getElementById('adcStep2').textContent = currentAdc;
+        }
+
+        // Update Track 2 brake button display
+        function updateBrakeDisplay2() {
+            const buttons = document.querySelectorAll('#track2 .brake-button');
+            const status = document.getElementById('brakeStatus2');
+
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            if (brakeActive2) {
+                const activeButton = document.querySelector(`#track2 [data-level="${currentBrakeLevel2}"]`);
+                if (activeButton) {
+                    activeButton.classList.add('active');
+                }
+
+                const brakeNames = ['OFF', 'Light', 'Medium', 'Heavy', 'EMERGENCY'];
+                status.textContent = `Brake: ${brakeNames[currentBrakeLevel2]}`;
+                status.classList.add('active');
+            } else {
+                status.textContent = 'Brake: OFF';
+                status.classList.remove('active');
+            }
+        }
+
+        // Update Track 2 speed and display
+        function updateSpeed2(adcStep) {
+            // If cruise control is active and this isn't a cruise command, ignore manual input
+            if (cruiseActive2 && adcStep !== cruiseSpeed2) {
+                return;
+            }
+
+            const pwmValue = adcToPwm(adcStep);
+            targetSpeed2 = pwmValue;
+
+            // Update displays
+            document.getElementById('speedValue2').textContent = adcStep;
+            document.getElementById('topSpeedValue2').textContent = adcStep;
+            document.getElementById('targetSpeed2').textContent = pwmValue;
+            document.getElementById('adcStep2').textContent = adcStep;
+
+            // Update throttle handle position
+            document.getElementById('throttleHandle2').value = adcStep;
+
+            // Send to ESP8266
+            sendCommand('speed2', pwmValue);
+        }
+
+        // Handle Track 2 direction switch
+        function toggleDirection2() {
+            isForward2 = !isForward2;
+
+            const switchElement = document.getElementById('directionSwitch2');
+            const directionDisplay = document.getElementById('currentDirection2');
+
+            if (isForward2) {
+                switchElement.className = 'direction-switch forward';
+                directionDisplay.textContent = 'Forward';
+            } else {
+                switchElement.className = 'direction-switch reverse';
+                directionDisplay.textContent = 'Reverse';
+            }
+
+            // Send to ESP8266
+            sendCommand('direction2', isForward2 ? 'forward' : 'reverse');
+        }
+
+        // Track 2 Emergency stop
+        function emergencyStop2() {
+            cancelCruise2(); // Cancel cruise control on emergency stop
+            targetSpeed2 = 0;
+            updateSpeed2(0);
+            sendCommand('emergency_stop2', true);
+        }
+
+        // Track 2 Cruise Control Functions
+        function setCruise2() {
+            const input = document.getElementById('cruiseInput2');
+            const speed = parseInt(input.value);
+
+            if (isNaN(speed) || speed < 0 || speed > adcSteps) {
+                alert('Please enter a speed between 0 and 16');
+                return;
+            }
+
+            // Clear any active brakes when setting cruise
+            if (brakeActive2) {
+                cancelBrake2();
+            }
+
+            cruiseActive2 = true;
+            cruiseSpeed2 = speed;
+
+            // Update displays
+            updateSpeed2(speed);
+            updateCruiseStatus2();
+        }
+
+        function cancelCruise2() {
+            cruiseActive2 = false;
+            cruiseSpeed2 = 0;
+            updateCruiseStatus2();
+        }
+
+        function updateCruiseStatus2() {
+            const status = document.getElementById('cruiseStatus2');
+            if (cruiseActive2) {
+                status.textContent = `Cruise: ON (${cruiseSpeed2})`;
+                status.className = 'cruise-status active';
+            } else {
+                status.textContent = 'Cruise: OFF';
+                status.className = 'cruise-status';
+            }
+        }
+
+        // Track 2 Waveform Generator Toggle
+        function toggleWaveform2() {
+            waveformMode2 = !waveformMode2;
+            sendCommand('waveform_mode2', waveformMode2);
+            updateWaveformDisplay2();
+        }
+
+        function updateWaveformDisplay2() {
+            const button = document.getElementById('waveformToggle2');
+            const status = document.getElementById('waveformStatus2');
+
+            if (waveformMode2) {
+                button.textContent = 'Advanced Waveforms';
+                button.className = 'waveform-button advanced';
+                status.textContent = 'Triangle <300 → Trapezoidal @125Hz ≥300';
+            } else {
+                button.textContent = 'Classic PWM';
+                button.className = 'waveform-button';
+                status.textContent = 'Standard PWM output';
+            }
+        }
+
+        // Send command to ESP8266
+        function sendCommand(command, value) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/control', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({
+                command: command,
+                value: value
+            }));
+        }
+
+        // Get status from ESP8266
+        function getStatus() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/api/status', true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    const status = JSON.parse(xhr.responseText);
+
+                    // Update Track 1 status
+                    document.getElementById('currentSpeed').textContent = status.current_speed;
+                    currentSpeed = status.current_speed;
+
+                    // Only update speed displays if not braking (prevent overriding brake '0' display)
+                    if (!brakeActive) {
+                        const currentAdc = pwmToAdc(status.current_speed);
+                        if (currentAdc !== undefined) {
+                            document.getElementById('speedValue').textContent = currentAdc;
+                            document.getElementById('topSpeedValue').textContent = currentAdc;
+                            document.getElementById('adcStep').textContent = currentAdc;
+                        }
+                    }
+
+                    // Update Track 1 waveform mode if it changed
+                    if (status.waveform_mode !== undefined && status.waveform_mode !== waveformMode) {
+                        waveformMode = status.waveform_mode;
+                        updateWaveformDisplay();
+                    }
+
+                    // Update Track 1 brake status if it changed
+                    if (status.brake_level !== undefined && status.brake_level !== currentBrakeLevel) {
+                        const wasBreaking = brakeActive;
+                        currentBrakeLevel = status.brake_level;
+                        brakeActive = status.brake_active;
+                        updateBrakeDisplay();
+
+                        // If we stopped braking, restore proper speed display
+                        if (wasBreaking && !brakeActive) {
+                            const currentAdc = pwmToAdc(status.current_speed);
+                            document.getElementById('speedValue').textContent = currentAdc;
+                            document.getElementById('topSpeedValue').textContent = currentAdc;
+                            document.getElementById('adcStep').textContent = currentAdc;
+                        }
+                    }
+
+                    // Update Track 2 status
+                    if (status.current_speed2 !== undefined) {
+                        document.getElementById('currentSpeed2').textContent = status.current_speed2;
+                        currentSpeed2 = status.current_speed2;
+
+                        // Only update speed displays if not braking (prevent overriding brake '0' display)
+                        if (!brakeActive2) {
+                            const currentAdc2 = pwmToAdc(status.current_speed2);
+                            if (currentAdc2 !== undefined) {
+                                document.getElementById('speedValue2').textContent = currentAdc2;
+                                document.getElementById('topSpeedValue2').textContent = currentAdc2;
+                                document.getElementById('adcStep2').textContent = currentAdc2;
+                            }
+                        }
+                    }
+
+                    // Update Track 2 waveform mode if it changed
+                    if (status.waveform_mode2 !== undefined && status.waveform_mode2 !== waveformMode2) {
+                        waveformMode2 = status.waveform_mode2;
+                        updateWaveformDisplay2();
+                    }
+
+                    // Update Track 2 brake status if it changed
+                    if (status.brake_level2 !== undefined && status.brake_level2 !== currentBrakeLevel2) {
+                        const wasBreaking2 = brakeActive2;
+                        currentBrakeLevel2 = status.brake_level2;
+                        brakeActive2 = status.brake_active2;
+                        updateBrakeDisplay2();
+
+                        // If we stopped braking, restore proper speed display
+                        if (wasBreaking2 && !brakeActive2) {
+                            const currentAdc2 = pwmToAdc(status.current_speed2);
+                            document.getElementById('speedValue2').textContent = currentAdc2;
+                            document.getElementById('topSpeedValue2').textContent = currentAdc2;
+                            document.getElementById('adcStep2').textContent = currentAdc2;
+                        }
+                    }
+                }
+            };
+            xhr.send();
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function () {
+            getStatus(); // Get initial status
+
+            // Throttle handle events
+            const throttleHandle = document.getElementById('throttleHandle');
+            throttleHandle.addEventListener('input', handleThrottle);
+
+            // Brake button events
+            document.getElementById('brakeLight').addEventListener('click', () => applyBrake(1));
+            document.getElementById('brakeMedium').addEventListener('click', () => applyBrake(2));
+            document.getElementById('brakeHeavy').addEventListener('click', () => applyBrake(3));
+            document.getElementById('brakeEmergency').addEventListener('click', () => applyBrake(4));
+
+            // Double-click to cancel brake
+            document.querySelectorAll('#track1 .brake-button').forEach(button => {
+                button.addEventListener('dblclick', cancelBrake);
+            });
+
+            // Direction switch
+            document.getElementById('directionSwitch').addEventListener('click', toggleDirection);
+
+            // Emergency stop
+            document.getElementById('emergencyStop').addEventListener('click', emergencyStop);
+
+            // Cruise control buttons
+            document.getElementById('cruiseSet').addEventListener('click', setCruise);
+            document.getElementById('cruiseCancel').addEventListener('click', cancelCruise);
+
+            // Cruise input - allow Enter key to set cruise
+            document.getElementById('cruiseInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    setCruise();
+                }
+            });
+
+            // Waveform generator toggle
+            document.getElementById('waveformToggle').addEventListener('click', toggleWaveform);
+
+            // ============ TRACK 2 EVENT LISTENERS ============
+
+            // Track 2 Throttle handle events
+            const throttleHandle2 = document.getElementById('throttleHandle2');
+            if (throttleHandle2) {
+                throttleHandle2.addEventListener('input', handleThrottle2);
+            }
+
+            // Track 2 Brake button events
+            const brakeLight2 = document.getElementById('brakeLight2');
+            if (brakeLight2) brakeLight2.addEventListener('click', () => applyBrake2(1));
+
+            const brakeMedium2 = document.getElementById('brakeMedium2');
+            if (brakeMedium2) brakeMedium2.addEventListener('click', () => applyBrake2(2));
+
+            const brakeHeavy2 = document.getElementById('brakeHeavy2');
+            if (brakeHeavy2) brakeHeavy2.addEventListener('click', () => applyBrake2(3));
+
+            const brakeEmergency2 = document.getElementById('brakeEmergency2');
+            if (brakeEmergency2) brakeEmergency2.addEventListener('click', () => applyBrake2(4));
+
+            // Track 2 Double-click to cancel brake
+            document.querySelectorAll('#track2 .brake-button').forEach(button => {
+                button.addEventListener('dblclick', cancelBrake2);
+            });
+
+            // Track 2 Direction switch
+            const directionSwitch2 = document.getElementById('directionSwitch2');
+            if (directionSwitch2) {
+                directionSwitch2.addEventListener('click', toggleDirection2);
+            }
+
+            // Track 2 Emergency stop
+            const emergencyStop2 = document.getElementById('emergencyStop2');
+            if (emergencyStop2) {
+                emergencyStop2.addEventListener('click', emergencyStop2);
+            }
+
+            // Track 2 Cruise control buttons
+            const cruiseSet2 = document.getElementById('cruiseSet2');
+            if (cruiseSet2) cruiseSet2.addEventListener('click', setCruise2);
+
+            const cruiseCancel2 = document.getElementById('cruiseCancel2');
+            if (cruiseCancel2) cruiseCancel2.addEventListener('click', cancelCruise2);
+
+            // Track 2 Cruise input - allow Enter key to set cruise
+            const cruiseInput2 = document.getElementById('cruiseInput2');
+            if (cruiseInput2) {
+                cruiseInput2.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        setCruise2();
+                    }
+                });
+            }
+
+            // Track 2 Waveform generator toggle
+            const waveformToggle2 = document.getElementById('waveformToggle2');
+            if (waveformToggle2) {
+                waveformToggle2.addEventListener('click', toggleWaveform2);
+            }
+
+            // Update status periodically
+            setInterval(getStatus, 500);
+        });
+    </script>
+</body>
+
+</html>
