@@ -1,0 +1,3 @@
+<img width="1895" height="916" alt="image" src="https://github.com/user-attachments/assets/ae014dd0-bb33-4a34-8227-c7c4d0f6b366" />
+Triangle <300 → Trapezoidal @125Hz ≥300 was taken from an I CANT FIND IT IN MY HISTORY!! ...when I was looking for information about n scale trains and such this guy had designed this  and I had tried it with the l298n setup and you can hear the difference and paired with the braking and such makes for a nice little DC ONLY  2 track controller for the tree or mantle 
+<img width="1537" height="817" alt="image" src="https://github.com/user-attachments/assets/b9e17b02-0018-483f-b80e-ae4f8e6ad5ab" />
